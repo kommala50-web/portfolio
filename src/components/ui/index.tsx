@@ -331,7 +331,7 @@ export function FloatingInput({
         {label}{required && <span style={{ color: C.red }}> *</span>}
       </label>
 
-      {/* @ts-expect-error — dynamic tag */}
+      
       <Tag
         id={name}
         name={name}
