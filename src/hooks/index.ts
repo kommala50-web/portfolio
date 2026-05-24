@@ -26,7 +26,7 @@ export function useInView(threshold = 0.10): [React.RefObject<HTMLElement>, bool
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVis(true); obs.disconnect(); } },
+      ([entry]) => { if (entry?.isIntersecting) { setVis(true); obs.disconnect(); } },
       { threshold }
     );
     obs.observe(el);
