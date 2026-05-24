@@ -1,0 +1,172 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+
+/* ─── CSS CUSTOM PROPERTIES ───────────────────────────────────────────────── */
+:root {
+  --font-jetbrains: 'JetBrains Mono', monospace;
+
+  /* Set by ThemeProvider via data-theme attribute */
+  --bg-canvas:    #04040A;
+  --bg-base:      #07070F;
+  --bg-surface:   #0C0C1A;
+  --bg-elevated:  #111122;
+  --bg-glass:     rgba(10,10,22,0.78);
+
+  --accent-cyan:   #1BE4FF;
+  --accent-red:    #FF2D55;
+  --accent-violet: #7C3AED;
+  --accent-amber:  #F5A623;
+  --accent-green:  #00E5A0;
+  --accent-pink:   #FF6EB4;
+
+  --text-primary:   #EEEEFF;
+  --text-secondary: #A0A0C0;
+  --text-muted:     #6A6A8A;
+  --text-dim:       #333355;
+
+  --border:         rgba(255,255,255,0.06);
+  --border-mid:     rgba(255,255,255,0.11);
+  --border-accent:  rgba(27,228,255,0.26);
+}
+
+[data-theme="light"] {
+  --bg-canvas:    #F4F4FC;
+  --bg-base:      #FFFFFF;
+  --bg-surface:   #F0F0FA;
+  --bg-elevated:  #E8E8F4;
+  --bg-glass:     rgba(255,255,255,0.82);
+
+  --accent-cyan:   #006EE6;
+  --accent-red:    #D0192B;
+  --accent-violet: #5B21B6;
+  --accent-amber:  #B45309;
+  --accent-green:  #047857;
+  --accent-pink:   #BE185D;
+
+  --text-primary:   #0A0A1A;
+  --text-secondary: #3A3A5A;
+  --text-muted:     #5A5A7A;
+  --text-dim:       #9090B0;
+
+  --border:        rgba(0,0,0,0.07);
+  --border-mid:    rgba(0,0,0,0.12);
+  --border-accent: rgba(0,110,230,0.28);
+}
+
+/* ─── RESET ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-jetbrains);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* ─── SCROLLBAR ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg-canvas); }
+::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
+
+/* ─── FOCUS ───────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ─── SELECTION ───────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(27, 228, 255, 0.25);
+  color: var(--text-primary);
+}
+
+/* ─── KEYFRAMES ───────────────────────────────────────────────────────────── */
+@keyframes gradShift {
+  0%   { background-position: 0%; }
+  100% { background-position: 200%; }
+}
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-9px); }
+}
+@keyframes floatGlyph {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  40%       { transform: translateY(-12px) rotate(1deg); }
+  70%       { transform: translateY(6px) rotate(-1deg); }
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px currentColor; }
+  50%       { opacity: 0.45; box-shadow: none; }
+}
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+@keyframes heroGlow {
+  0%, 100% { text-shadow: 0 0 24px rgba(27,228,255,0.30); }
+  50%       { text-shadow: 0 0 44px rgba(27,228,255,0.65), 0 0 80px rgba(27,228,255,0.18); }
+}
+@keyframes scanLine {
+  0%   { top: -1px; }
+  100% { top: 100%; }
+}
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 0.55; }
+}
+@keyframes scrollDot {
+  0%   { transform: translateY(0);    opacity: 1; }
+  78%  { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0);    opacity: 0; }
+}
+@keyframes scrollChev {
+  0%, 100% { opacity: 0.2; transform: translateY(0); }
+  50%       { opacity: 0.85; transform: translateY(3px); }
+}
+@keyframes glowLine {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.85; }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes tooltipFade {
+  from { opacity: 0; transform: translateX(4px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes barShimmer {
+  0%        { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(400%); }
+}
+
+/* ─── REDUCED MOTION ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1      !important;
+    transition-duration:       0.01ms !important;
+    scroll-behavior:           auto   !important;
+  }
+}
