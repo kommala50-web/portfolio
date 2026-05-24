@@ -49,7 +49,7 @@ export const THEMES = {
     borderAccent:  "rgba(0,110,230,0.28)",
     shadow:        "0 8px 32px rgba(0,0,20,0.10)",
   },
-} as const;
+};
 
 export type Theme = keyof typeof THEMES;
 export type ThemeColors = typeof THEMES.dark;
