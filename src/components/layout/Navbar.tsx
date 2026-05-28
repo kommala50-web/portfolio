@@ -173,7 +173,7 @@ function ResumeBtn() {
   return (
     <a
       ref={mag.ref as React.RefObject<HTMLAnchorElement>}
-      href="/resume.pdf"
+      href="/Kamani_Vijay_Resume.pdf"
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Download Resume"
@@ -184,7 +184,7 @@ function ResumeBtn() {
         position:       "relative",
         display:        "inline-flex",
         alignItems:     "center",
-        gap:            6,
+        justifyContent: "center",
         padding:        "7px 16px",
         borderRadius:   7,
         fontSize:       9,
@@ -210,8 +210,26 @@ function ResumeBtn() {
         transition: `transform 260ms ${EASE.spring}`,
         zIndex: 0,
       }} />
-      <span style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: 5 }}>
-        ↓ RÉSUMÉ
+      <span style={{
+        position: "relative",
+        zIndex: 1,
+        display: "block",
+        height: 12,
+        overflow: "hidden",
+        lineHeight: "12px",
+      }}>
+        <span style={{
+          display: "block",
+          transform: hov ? "translateY(-12px)" : "translateY(0)",
+          transition: `transform 300ms ${EASE.spring}`,
+        }}>
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, height: 12 }}>
+            RESUME ↗
+          </span>
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, height: 12 }}>
+            DOWNLOAD CV ↓
+          </span>
+        </span>
       </span>
     </a>
   );
@@ -322,8 +340,8 @@ function MobileDrawer({
             </span>
             <ThemeToggle />
           </div>
-          <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" onClick={onClose} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: 12, borderRadius: 10, background: ha(C.cyan, 0.10), border: `1px solid ${ha(C.cyan, 0.28)}`, textDecoration: "none", color: C.cyan, fontSize: 10, fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.10em" }}>
-            ↓ DOWNLOAD RÉSUMÉ
+          <a href="/Kamani_Vijay_Resume.pdf" target="_blank" rel="noopener noreferrer" onClick={onClose} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: 12, borderRadius: 10, background: ha(C.cyan, 0.10), border: `1px solid ${ha(C.cyan, 0.28)}`, textDecoration: "none", color: C.cyan, fontSize: 10, fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.10em" }}>
+            ↓ DOWNLOAD CV
           </a>
         </div>
       </nav>

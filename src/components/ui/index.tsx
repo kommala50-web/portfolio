@@ -331,7 +331,6 @@ export function FloatingInput({
         {label}{required && <span style={{ color: C.red }}> *</span>}
       </label>
 
-      
       <Tag
         id={name}
         name={name}

@@ -10,10 +10,13 @@ import { Reveal, SectionLabel, TechTag, SectionBg } from "@/components/ui";
 
 // ─── CERT CARD ────────────────────────────────────────────────────────────────
 function CertCard({
-  cert, isCenter,
+  cert,
+  isCenter,
+  onPreview,
 }: {
   cert: typeof CERTIFICATIONS[number];
   isCenter: boolean;
+  onPreview?: () => void;
 }) {
   const { C }  = useTheme();
   const rm     = useReducedMotion();
@@ -25,6 +28,11 @@ function CertCard({
   return (
     <div
       {...handlers}
+      onClick={() => {
+        if (isCenter) {
+          onPreview?.();
+        }
+      }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => { setHov(false); handlers.onMouseLeave(); }}
       style={{
@@ -50,7 +58,7 @@ function CertCard({
         willChange: "transform",
         position:   "relative",
         overflow:   "hidden",
-        cursor:     isCenter ? "default" : "pointer",
+        cursor:     "pointer",
       }}
     >
       {/* Top accent bar */}
@@ -78,10 +86,51 @@ function CertCard({
           {cert.skills.map((s) => <TechTag key={s} label={s} accent={accent} compact />)}
         </div>
 
-        <div style={{ padding: "7px 11px", borderRadius: 8, background: ha(C.textPrimary, 0.03), border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 8, fontFamily: "monospace", color: C.textDim, letterSpacing: "0.08em", textTransform: "uppercase" }}>Credential ID</span>
-          <span style={{ fontSize: 9, fontFamily: "monospace", color: C.textMuted }}>{cert.credential}</span>
-        </div>
+        {/* Action Row */}
+        {isCenter ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreview?.();
+            }}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              borderRadius: 8,
+              background: hov ? accent : ha(accent, 0.08),
+              border: `1px solid ${ha(accent, hov ? 0.70 : 0.28)}`,
+              color: hov ? C.bgCanvas : accent,
+              fontSize: 8.5,
+              fontFamily: "monospace",
+              fontWeight: 700,
+              letterSpacing: "0.10em",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              boxShadow: hov ? `0 0 20px ${ha(accent, 0.40)}` : "none",
+              transition: `all ${DUR.normal}ms ${EASE.spring}`,
+            }}
+          >
+            👁 PREVIEW CERTIFICATE
+          </button>
+        ) : (
+          <div style={{
+            padding: "8px 12px",
+            borderRadius: 8,
+            background: "transparent",
+            border: `1px dashed ${C.border}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: 0.5,
+          }}>
+            <span style={{ fontSize: 8, fontFamily: "monospace", color: C.textDim, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              Click to Focus
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -128,6 +177,7 @@ export function CertificationsSection() {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const [idx,  setIdx]  = useState(0);
+  const [activePreview, setActivePreview] = useState<typeof CERTIFICATIONS[number] | null>(null);
   const total = CERTIFICATIONS.length;
   const dragStart = useRef<number | null>(null);
 
@@ -135,26 +185,31 @@ export function CertificationsSection() {
     setIdx(((n % total) + total) % total);
   }, [total]);
 
-  // Auto-advance
+  // Auto-advance (paused when modal is open)
   useEffect(() => {
-    if (rm || !vis) return;
+    if (rm || !vis || activePreview !== null) return;
     const id = setInterval(() => goTo(idx + 1), 4200);
     return () => clearInterval(id);
-  }, [idx, rm, vis, goTo]);
+  }, [idx, rm, vis, goTo, activePreview]);
 
-  // Keyboard nav
+  // Keyboard nav (disabled when modal is open)
   useEffect(() => {
+    if (activePreview !== null) return;
     const fn = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft")  goTo(idx - 1);
       if (e.key === "ArrowRight") goTo(idx + 1);
     };
     window.addEventListener("keydown", fn);
     return () => window.removeEventListener("keydown", fn);
-  }, [idx, goTo]);
+  }, [idx, goTo, activePreview]);
 
   const getSlot = (offset: number) => ((idx + offset + total) % total);
 
-  const onPointerDown = (e: React.PointerEvent) => { dragStart.current = e.clientX; };
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (activePreview !== null) return;
+    dragStart.current = e.clientX;
+  };
+  
   const onPointerUp   = (e: React.PointerEvent) => {
     if (dragStart.current === null) return;
     const dx = e.clientX - dragStart.current;
@@ -172,6 +227,18 @@ export function CertificationsSection() {
       aria-label="Certifications"
       style={{ position: "relative", overflow: "hidden", padding: "clamp(5rem,10vh,8rem) 0", background: C.bgBase, borderTop: `1px solid ${C.border}` }}
     >
+      {/* Dynamic Keyframes Injection */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes fadeIn {
+          from { opacity: 0; backdrop-filter: blur(0px); }
+          to { opacity: 1; backdrop-filter: blur(16px); }
+        }
+        @keyframes scaleUp {
+          from { opacity: 0; transform: scale(0.96) translateY(10px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}} />
+
       <SectionBg accent={C.violet} />
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 1240, margin: "0 auto", padding: "0 clamp(1.25rem,5vw,4rem)" }}>
@@ -217,7 +284,11 @@ export function CertificationsSection() {
                 key={cert.id}
                 onClick={() => !isCenter && (offset === -1 ? goTo(idx - 1) : goTo(idx + 1))}
               >
-                <CertCard cert={cert} isCenter={isCenter} />
+                <CertCard
+                  cert={cert}
+                  isCenter={isCenter}
+                  onPreview={() => setActivePreview(cert)}
+                />
               </div>
             );
           })}
@@ -260,6 +331,150 @@ export function CertificationsSection() {
           {String(idx + 1).padStart(2, "0")} / {String(total).padStart(2, "0")} · {activeCert.title}
         </p>
       </div>
+
+      {/* Cinematic Preview Modal */}
+      {activePreview && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: "rgba(4, 4, 10, 0.82)",
+            backdropFilter: "blur(16px) saturate(180%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "clamp(10px, 4vw, 30px)",
+            animation: "fadeIn 280ms ease-out",
+          }}
+          onClick={() => setActivePreview(null)}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 960,
+              height: "82vh",
+              background: C.bgSurface,
+              borderRadius: 16,
+              border: `1px solid ${ha(C[activePreview.accentKey as keyof typeof C] as string, 0.40)}`,
+              boxShadow: `0 24px 70px rgba(0,0,0,0.85), 0 0 45px ${ha(C[activePreview.accentKey as keyof typeof C] as string, 0.15)}`,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              animation: "scaleUp 320ms cubic-bezier(0.16, 1, 0.3, 1)",
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Top Accent Bar */}
+            <div style={{
+              position: "absolute",
+              top: 0, left: 0, right: 0, height: 3,
+              background: `linear-gradient(90deg, transparent, ${C[activePreview.accentKey as keyof typeof C]}, transparent)`
+            }} />
+
+            {/* Modal Header */}
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 24px",
+              borderBottom: `1px solid ${C.border}`,
+              background: C.bgElevated,
+            }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>{activePreview.icon}</span>
+                  <h3 style={{ fontSize: "clamp(10px, 4.5vw, 14px)", fontFamily: "monospace", fontWeight: 800, color: C.textPrimary, margin: 0 }}>
+                    {activePreview.title}
+                  </h3>
+                </div>
+                <p style={{ fontSize: 9, fontFamily: "monospace", color: C[activePreview.accentKey as keyof typeof C] as string, margin: "2px 0 0 24px" }}>
+                  {activePreview.issuer} · Issued {activePreview.issued}
+                </p>
+              </div>
+              <button
+                onClick={() => setActivePreview(null)}
+                aria-label="Close preview"
+                style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  border: `1px solid ${C.border}`,
+                  background: "transparent",
+                  cursor: "pointer",
+                  color: C.textMuted,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 14,
+                  transition: `all ${DUR.fast}ms`,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = C.red; e.currentTarget.style.borderColor = ha(C.red, 0.4); }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = C.textMuted; e.currentTarget.style.borderColor = C.border; }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div style={{ flex: 1, position: "relative", background: "#000", display: "flex", flexDirection: "column" }}>
+              <iframe
+                src={`${activePreview.fileUrl}#toolbar=0&navpanes=0`}
+                width="100%"
+                height="100%"
+                style={{ border: "none", flex: 1 }}
+                title={`Certificate Preview: ${activePreview.title}`}
+              />
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: "14px 24px",
+              borderTop: `1px solid ${C.border}`,
+              background: C.bgElevated,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 12,
+            }}>
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                {activePreview.skills.slice(0, 3).map((s) => (
+                  <span key={s} style={{ fontSize: 7.5, fontFamily: "monospace", padding: "2px 6px", borderRadius: 4, background: ha(C.textPrimary, 0.05), border: `1px solid ${C.border}`, color: C.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    {s}
+                  </span>
+                ))}
+              </div>
+              <a
+                href={activePreview.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: "7px 14px",
+                  borderRadius: 6,
+                  background: C[activePreview.accentKey as keyof typeof C] as string,
+                  color: C.bgCanvas,
+                  fontSize: 9,
+                  fontFamily: "monospace",
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textDecoration: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  boxShadow: `0 0 14px ${ha(C[activePreview.accentKey as keyof typeof C] as string, 0.3)}`,
+                  transition: "transform 150ms",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.03)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; }}
+              >
+                OPEN IN NEW TAB ↗
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
