@@ -20,6 +20,8 @@ export interface Project {
   github:       string;
   live:         string;
   year:         string;
+  thumbnail?:   string;
+  images?:      string[];
 }
 
 export const PROJECTS: Project[] = [
@@ -32,6 +34,8 @@ export const PROJECTS: Project[] = [
     metrics: [{ value:"Live", label:"Status" },{ value:"React", label:"Framework" },{ value:"Clean UI", label:"Design" }],
     tech: ["React","Tailwind CSS","JavaScript"],
     github: "https://github.com/kommala50-web/vijay-techpath", live: "https://vijay-techpath.netlify.app/", year: "2024",
+    thumbnail: "/projects/techpath/homepage.jpg",
+    images: ["/projects/techpath/homepage.jpg", "/projects/techpath/career-paths.jpg"],
   },
   {
     id: "expense-tracker", slug: "02",
@@ -52,6 +56,12 @@ export const PROJECTS: Project[] = [
     metrics: [{ value:"Live", label:"Status" },{ value:"Concept", label:"Stage" },{ value:"Vercel", label:"Hosted" }],
     tech: ["React","Tailwind CSS","JavaScript","Vercel"],
     github: "", live: "https://agri-trust-three.vercel.app/", year: "2025",
+    thumbnail: "/projects/agritrust/preview.jpg",
+    images: [
+      "/projects/agritrust/preview.jpg",
+      "/projects/agritrust/dashboard.jpg",
+      "/projects/agritrust/profile.jpg",
+    ],
   },
   {
     id: "smart-attendance", slug: "04",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useTheme } from "@/providers/ThemeProvider";
 import { useInView, useReducedMotion, useMediaQuery, useTilt, useMagnetic } from "@/hooks";
 import { ha } from "@/lib/utils";
@@ -10,9 +10,9 @@ import { Reveal, SectionLabel, TechTag, StatusBadge, ActionBtn, SectionBg } from
 
 // ─── PROJECT CARD (shared by featured + grid) ─────────────────────────────────
 function ProjectCard({
-  project, vis, rm, delay = 0, featured = false,
+  project, vis, rm, delay = 0, featured = false, onPreview,
 }: {
-  project: Project; vis: boolean; rm: boolean; delay?: number; featured?: boolean;
+  project: Project; vis: boolean; rm: boolean; delay?: number; featured?: boolean; onPreview?: (project: Project) => void;
 }) {
   const { C } = useTheme();
   const [hov, setHov] = useState(false);
@@ -20,6 +20,8 @@ function ProjectCard({
 
   const accent    = C[project.accentKey    as keyof typeof C] as string;
   const accentSec = C[project.accentSecKey as keyof typeof C] as string;
+
+  const hasImages = !!(project.images && project.images.length > 0);
 
   return (
     <div
@@ -104,6 +106,41 @@ function ProjectCard({
           <div style={{ display: "flex", gap: 7, flexShrink: 0, opacity: hov ? 1 : 0.7, transition: "opacity 250ms" }}>
             <ActionBtn href={project.github} label="Code" />
             <ActionBtn primary accent={accent} href={project.live} label="Live" />
+            {hasImages && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onPreview?.(project); }}
+                style={{
+                  display:        "inline-flex",
+                  alignItems:     "center",
+                  gap:            4,
+                  padding:        "5px 10px",
+                  borderRadius:   6,
+                  border:         `1px solid ${ha(accent, 0.45)}`,
+                  background:     ha(accent, 0.10),
+                  color:          accent,
+                  fontSize:       9,
+                  fontFamily:     "monospace",
+                  fontWeight:     700,
+                  letterSpacing:  "0.06em",
+                  cursor:         "pointer",
+                  outline:        "none",
+                  transition:     `all ${DUR.fast}ms`,
+                  textShadow:     `0 0 8px ${ha(accent, 0.4)}`,
+                  boxShadow:      `0 0 10px ${ha(accent, 0.12)}`,
+                  whiteSpace:     "nowrap",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background  = ha(accent, 0.22);
+                  e.currentTarget.style.boxShadow   = `0 0 18px ${ha(accent, 0.30)}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background  = ha(accent, 0.10);
+                  e.currentTarget.style.boxShadow   = `0 0 10px ${ha(accent, 0.12)}`;
+                }}
+              >
+                Preview ↗
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -165,6 +202,297 @@ function FilterPill({
   );
 }
 
+// ─── PREVIEW MODAL (carousel) ─────────────────────────────────────────────────
+function PreviewModal({
+  project,
+  onClose,
+}: {
+  project: Project;
+  onClose: () => void;
+}) {
+  const { C } = useTheme();
+  const isMobile = useMediaQuery("(max-width: 840px)");
+  const [index, setIndex] = useState(0);
+  const images = project.images ?? [];
+  const accent = C[project.accentKey as keyof typeof C] as string;
+  const total  = images.length;
+
+  const prev = useCallback(() => setIndex((i) => (i - 1 + total) % total), [total]);
+  const next = useCallback(() => setIndex((i) => (i + 1) % total), [total]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape")     onClose();
+      if (e.key === "ArrowLeft")  prev();
+      if (e.key === "ArrowRight") next();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose, prev, next]);
+
+  const navBtnStyle = (side: "left" | "right"): React.CSSProperties => ({
+    position:       "absolute",
+    top:            "50%",
+    [side]:         isMobile ? 8 : 16,
+    transform:      "translateY(-50%)",
+    zIndex:         10,
+    width:          isMobile ? 34 : 42,
+    height:         isMobile ? 34 : 42,
+    borderRadius:   "50%",
+    border:         `1px solid ${ha(accent, 0.40)}`,
+    background:     ha(C.bgCanvas, 0.85),
+    backdropFilter: "blur(8px)",
+    color:          accent,
+    fontSize:       isMobile ? 14 : 18,
+    display:        "flex",
+    alignItems:     "center",
+    justifyContent: "center",
+    cursor:         "pointer",
+    outline:        "none",
+    boxShadow:      `0 0 18px ${ha(accent, 0.20)}`,
+    transition:     `all ${DUR.fast}ms`,
+  });
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${project.title} preview`}
+      style={{
+        position:       "fixed",
+        inset:          0,
+        zIndex:         9999,
+        background:     "rgba(4, 4, 10, 0.88)",
+        backdropFilter: "blur(18px) saturate(180%)",
+        display:        "flex",
+        alignItems:     "center",
+        justifyContent: "center",
+        padding:        "clamp(10px, 4vw, 30px)",
+        animation:      "fadeIn 250ms ease-out",
+      }}
+      onClick={onClose}
+    >
+      <style>{`
+        @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleUp { from { opacity: 0; transform: scale(0.94) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+      `}</style>
+
+      <div
+        style={{
+          width:         "100%",
+          maxWidth:      860,
+          maxHeight:     "90vh",
+          background:    C.bgSurface,
+          borderRadius:  18,
+          border:        `1px solid ${ha(accent, 0.40)}`,
+          boxShadow:     `0 30px 80px rgba(0,0,0,0.90), 0 0 50px ${ha(accent, 0.18)}`,
+          display:       "flex",
+          flexDirection: "column",
+          overflow:      "hidden",
+          animation:     "scaleUp 320ms cubic-bezier(0.16, 1, 0.3, 1)",
+          position:      "relative",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Top accent bar */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
+
+        {/* Header */}
+        <div style={{
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "space-between",
+          padding:        "16px 24px",
+          borderBottom:   `1px solid ${C.border}`,
+          background:     C.bgElevated,
+          flexShrink:     0,
+        }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 16 }}>{project.emoji}</span>
+              <h3 style={{ fontSize: "clamp(12px, 4.5vw, 15px)", fontFamily: "monospace", fontWeight: 800, color: C.textPrimary, margin: 0 }}>
+                {project.title}
+              </h3>
+              <span style={{ fontSize: 9, fontFamily: "monospace", color: C.textDim }}>({project.year})</span>
+              {total > 1 && (
+                <span style={{ fontSize: 8, fontFamily: "monospace", color: accent, padding: "2px 7px", borderRadius: 4, background: ha(accent, 0.10), border: `1px solid ${ha(accent, 0.25)}`, letterSpacing: "0.08em" }}>
+                  {index + 1} / {total}
+                </span>
+              )}
+            </div>
+            <p style={{ fontSize: 9, fontFamily: "monospace", color: accent, margin: "2px 0 0 24px" }}>{project.tagline}</p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close preview"
+            style={{
+              width: 32, height: 32, borderRadius: 8,
+              border: `1px solid ${C.border}`,
+              background: "transparent",
+              cursor: "pointer",
+              color: C.textMuted,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 14,
+              transition: `all ${DUR.fast}ms`,
+              outline: "none",
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = C.red; e.currentTarget.style.borderColor = ha(C.red, 0.4); }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = C.textMuted; e.currentTarget.style.borderColor = C.border; }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Gallery viewer */}
+        <div style={{
+          flex:           1,
+          background:     "#05050c",
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          position:       "relative",
+          overflow:       "hidden",
+          minHeight:      isMobile ? 300 : 420,
+        }}>
+          {/* Image */}
+          <img
+            key={images[index]}
+            src={images[index]}
+            alt={`${project.title} screenshot ${index + 1}`}
+            loading="lazy"
+            style={{
+              maxWidth:   "100%",
+              maxHeight:  isMobile ? 340 : 500,
+              width:      "auto",
+              height:     "auto",
+              objectFit:  "contain",
+              borderRadius: 8,
+              boxShadow:  `0 8px 40px rgba(0,0,0,0.70), 0 0 30px ${ha(accent, 0.12)}`,
+              animation:  "fadeIn 220ms ease-out",
+              padding:    isMobile ? "8px" : "20px",
+            }}
+          />
+
+          {/* Prev arrow */}
+          {total > 1 && (
+            <button
+              onClick={prev}
+              aria-label="Previous screenshot"
+              style={navBtnStyle("left")}
+              onMouseEnter={(e) => { e.currentTarget.style.background = ha(accent, 0.20); e.currentTarget.style.boxShadow = `0 0 28px ${ha(accent, 0.40)}`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = ha(C.bgCanvas, 0.85); e.currentTarget.style.boxShadow = `0 0 18px ${ha(accent, 0.20)}`; }}
+            >
+              ‹
+            </button>
+          )}
+
+          {/* Next arrow */}
+          {total > 1 && (
+            <button
+              onClick={next}
+              aria-label="Next screenshot"
+              style={navBtnStyle("right")}
+              onMouseEnter={(e) => { e.currentTarget.style.background = ha(accent, 0.20); e.currentTarget.style.boxShadow = `0 0 28px ${ha(accent, 0.40)}`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = ha(C.bgCanvas, 0.85); e.currentTarget.style.boxShadow = `0 0 18px ${ha(accent, 0.20)}`; }}
+            >
+              ›
+            </button>
+          )}
+
+          {/* Dot indicators */}
+          {total > 1 && (
+            <div style={{ position: "absolute", bottom: 14, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 6 }}>
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setIndex(i)}
+                  aria-label={`Go to screenshot ${i + 1}`}
+                  style={{
+                    width:        i === index ? 20 : 6,
+                    height:       6,
+                    borderRadius: 999,
+                    background:   i === index ? accent : ha(accent, 0.30),
+                    border:       "none",
+                    cursor:       "pointer",
+                    outline:      "none",
+                    padding:      0,
+                    transition:   `all ${DUR.normal}ms`,
+                    boxShadow:    i === index ? `0 0 8px ${ha(accent, 0.6)}` : "none",
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          padding:        "14px 24px",
+          borderTop:      `1px solid ${C.border}`,
+          background:     C.bgElevated,
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "space-between",
+          flexWrap:       "wrap",
+          gap:            12,
+          flexShrink:     0,
+        }}>
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+            {project.tech.map((t) => (
+              <span key={t} style={{ fontSize: 7.5, fontFamily: "monospace", padding: "2px 6px", borderRadius: 4, background: ha(C.textPrimary, 0.05), border: `1px solid ${C.border}`, color: C.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                {t}
+              </span>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {project.github && (
+              <a
+                href={project.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: "7px 14px", borderRadius: 6,
+                  border: `1px solid ${C.border}`, background: "transparent",
+                  color: C.textSecondary, fontSize: 9, fontFamily: "monospace",
+                  fontWeight: 700, letterSpacing: "0.08em", textDecoration: "none",
+                  display: "flex", alignItems: "center", gap: 6,
+                  transition: "border-color 150ms, color 150ms",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.textPrimary; e.currentTarget.style.color = C.textPrimary; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textSecondary; }}
+              >
+                CODE ↗
+              </a>
+            )}
+            {project.live && (
+              <a
+                href={project.live}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: "7px 14px", borderRadius: 6,
+                  background: accent, color: C.bgCanvas,
+                  fontSize: 9, fontFamily: "monospace", fontWeight: 700,
+                  letterSpacing: "0.08em", textDecoration: "none",
+                  display: "flex", alignItems: "center", gap: 6,
+                  boxShadow: `0 0 14px ${ha(accent, 0.3)}`,
+                  transition: "transform 150ms",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.03)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; }}
+              >
+                LIVE ↗
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── PROJECTS SECTION ─────────────────────────────────────────────────────────
 export function ProjectsSection() {
   const { C } = useTheme();
@@ -176,6 +504,7 @@ export function ProjectsSection() {
 
   const [filter,  setFilter]  = useState<string>("all");
   const [showAll, setShowAll] = useState(false);
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
 
   const featured = useMemo(() => PROJECTS.filter((p) => p.featured), []);
   const gridAll  = useMemo(() => {
@@ -227,7 +556,7 @@ export function ProjectsSection() {
           </Reveal>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, opacity: featVis ? 1 : 0, transition: rm ? "none" : `opacity 600ms ${EASE.spring} 100ms` }}>
             {featured.map((p) => (
-              <ProjectCard key={p.id} project={p} vis={featVis} rm={rm} featured />
+              <ProjectCard key={p.id} project={p} vis={featVis} rm={rm} featured onPreview={setActiveProject} />
             ))}
           </div>
         </div>
@@ -259,7 +588,7 @@ export function ProjectsSection() {
               </div>
             ) : (
               visible.map((p, i) => (
-                <ProjectCard key={`${filter}-${p.id}`} project={p} vis={gridVis} rm={rm} delay={i * 65} />
+                <ProjectCard key={`${filter}-${p.id}`} project={p} vis={gridVis} rm={rm} delay={i * 65} onPreview={setActiveProject} />
               ))
             )}
           </div>
@@ -295,6 +624,11 @@ export function ProjectsSection() {
           </Reveal>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {activeProject && activeProject.images && activeProject.images.length > 0 && (
+        <PreviewModal project={activeProject} onClose={() => setActiveProject(null)} />
+      )}
     </section>
   );
 }

@@ -96,7 +96,7 @@ function SocialCard({
 // ─── CONTACT FORM ────────────────────────────────────────────────────────────
 type FormState = { name: string; email: string; subject: string; message: string };
 type FormErrors = Partial<Record<keyof FormState, string>>;
-type FormStatus = "idle" | "sending" | "sent";
+type FormStatus = "idle" | "sending" | "sent" | "error";
 
 function ContactForm({ vis, rm }: { vis: boolean; rm: boolean }) {
   const { C } = useTheme();
@@ -126,7 +126,7 @@ function ContactForm({ vis, rm }: { vis: boolean; rm: boolean }) {
     setErrors((e) => ({ ...e, [name]: err }));
   }, [fields, validate]);
 
-  const onSubmit = useCallback((e: React.FormEvent) => {
+  const onSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     const allTouched = { name: true, email: true, subject: true, message: true };
     setTouched(allTouched);
@@ -138,8 +138,27 @@ function ContactForm({ vis, rm }: { vis: boolean; rm: boolean }) {
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
     setStatus("sending");
-    // Simulate API call — replace with your Resend/EmailJS call
-    setTimeout(() => setStatus("sent"), 1800);
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          access_key: process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY,
+          name:       fields.name,
+          email:      fields.email,
+          subject:    fields.subject,
+          message:    fields.message,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatus("sent");
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
   }, [fields, validate]);
 
   const reset = useCallback(() => {
@@ -166,6 +185,29 @@ function ContactForm({ vis, rm }: { vis: boolean; rm: boolean }) {
           <p style={{ fontSize: 12, fontFamily: "monospace", color: C.textMuted, lineHeight: 1.7, margin: "0 0 18px" }}>Thanks for reaching out. I&apos;ll reply within 24 hours.</p>
           <button onClick={reset} style={{ padding: "8px 18px", borderRadius: 8, border: `1px solid ${ha(C.cyan,0.32)}`, background: "transparent", color: C.cyan, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", cursor: "pointer", outline: "none" }}>
             Send another →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error state ───────────────────────────────────────────────────────────
+  if (status === "error") {
+    return (
+      <div style={{
+        borderRadius: 18, background: C.bgGlass, backdropFilter: "blur(22px) saturate(200%)",
+        border: `1px solid ${ha(C.red, 0.35)}`,
+        boxShadow: `0 0 60px ${ha(C.red, 0.08)}`,
+        padding: "3rem 2rem",
+        display: "flex", flexDirection: "column", alignItems: "center", gap: 18, textAlign: "center",
+        animation: rm ? "none" : "cardIn 500ms cubic-bezier(0.16,1,0.3,1)",
+      }}>
+        <div style={{ width: 60, height: 60, borderRadius: "50%", background: ha(C.red, 0.14), border: `2px solid ${ha(C.red,0.45)}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, boxShadow: `0 0 26px ${ha(C.red,0.35)}` }}>✕</div>
+        <div>
+          <h3 style={{ fontSize: 18, fontFamily: "monospace", fontWeight: 800, color: C.textPrimary, letterSpacing: "-0.02em", margin: "0 0 8px" }}>Something went wrong</h3>
+          <p style={{ fontSize: 12, fontFamily: "monospace", color: C.textMuted, lineHeight: 1.7, margin: "0 0 18px" }}>Failed to send your message. Please try again or email me directly.</p>
+          <button onClick={reset} style={{ padding: "8px 18px", borderRadius: 8, border: `1px solid ${ha(C.red,0.32)}`, background: "transparent", color: C.red, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", cursor: "pointer", outline: "none" }}>
+            Try again →
           </button>
         </div>
       </div>
