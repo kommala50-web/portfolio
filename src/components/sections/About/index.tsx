@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTheme } from "@/providers/ThemeProvider";
 import { useInView, useReducedMotion, useMediaQuery, useTilt } from "@/hooks";
 import { ha } from "@/lib/utils";
-import { JOURNEY, QUICK_FACTS } from "@/data/experience";
+import { QUICK_FACTS } from "@/data/experience";
 import { Reveal, SectionLabel, TechTag, ActionBtn, SectionBg } from "@/components/ui";
 
 // ─── PROFILE CARD ────────────────────────────────────────────────────────────
@@ -111,7 +111,6 @@ export function AboutSection() {
   const [secRef,  secVis]  = useInView(0.06);
   const [profRef, profVis] = useInView(0.15);
   const [rightRef,rightVis]= useInView(0.05);
-  const [timeRef, timeVis] = useInView(0.04);
   const [statsRef,statsVis]= useInView(0.25);
   const [philRef, philVis] = useInView(0.12);
   const rm = useReducedMotion();
@@ -168,59 +167,43 @@ export function AboutSection() {
             <ProfileCard vis={profVis} />
           </div>
 
-          {/* Bio + Timeline */}
+          {/* Bio + Details */}
           <div ref={rightRef as React.RefObject<HTMLDivElement>}>
             {/* Bio paragraphs */}
             <div style={{ marginBottom: "clamp(2rem,4vh,3.5rem)" }}>
-              {[
-                { delay: 0, text: "'m Kamani Vijay, a Computer Science Engineering student at Narsimha Reddy College of Engineering & Management (NRCM). I focus on building immersive and performance-driven digital experiences using modern frontend technologies, interactive design systems, and intelligent application architecture.", isFirst: true },
-                { delay: 80, text: "My interests span frontend engineering, AI-powered systems, animation-driven interfaces, and real-world problem solving through software. I care deeply about the gap between functional and truly great." },
-                { delay: 160, text: "Beyond development, I actively participate in hackathons, collaborative projects, and creative writing initiatives like 'Echo of Life', where storytelling and technology intersect. Open to internships, collaborations, and impactful projects." },
-              ].map(({ delay, text, isFirst }, i) => (
-                <Reveal key={i} vis={rightVis} rm={rm} delay={delay} style={{ marginBottom: i < 2 ? 18 : 0 }}>
-                  <p style={{ fontSize: "clamp(0.86rem,1.1vw,0.98rem)", color: C.textMuted, lineHeight: 1.82, letterSpacing: "-0.005em" }}>
-                    {isFirst && (
-                      <span style={{ float: "left", fontSize: "3.2em", lineHeight: 0.80, fontWeight: 800, marginRight: 5, marginTop: "0.05em", color: C.cyan, fontFamily: "monospace", letterSpacing: "-0.06em", textShadow: `0 0 18px ${ha(C.cyan,0.44)}` }}>I</span>
-                    )}
-                    {text}
-                  </p>
-                </Reveal>
-              ))}
+              <Reveal vis={rightVis} rm={rm} delay={0} style={{ marginBottom: 18 }}>
+                <p style={{ fontSize: "clamp(0.86rem,1.1vw,0.98rem)", color: C.textMuted, lineHeight: 1.82, letterSpacing: "-0.005em" }}>
+                  <span style={{ float: "left", fontSize: "3.2em", lineHeight: 0.80, fontWeight: 800, marginRight: 5, marginTop: "0.05em", color: C.cyan, fontFamily: "monospace", letterSpacing: "-0.06em", textShadow: `0 0 18px ${ha(C.cyan,0.44)}` }}>I</span>
+                  &apos;m Kamani Vijay, a B.Tech Computer Science Engineering student at Narsimha Reddy College of Engineering &amp; Management (Graduating 2028). I am deeply passionate about Full Stack Development, AI, and building intelligent systems that solve real-world problems.
+                </p>
+              </Reveal>
+
+              <Reveal vis={rightVis} rm={rm} delay={80} style={{ marginBottom: 18 }}>
+                <p style={{ fontSize: "clamp(0.86rem,1.1vw,0.98rem)", color: C.textMuted, lineHeight: 1.82, letterSpacing: "-0.005em" }}>
+                  My core focus lies in building scalable web applications and AI-powered solutions. I thrive at the intersection of performance-driven backend logic and immersive frontend experiences, constantly striving to bridge the gap between functionality and truly great design.
+                </p>
+              </Reveal>
+
+              <Reveal vis={rightVis} rm={rm} delay={160}>
+                <p style={{ fontSize: "clamp(0.86rem,1.1vw,0.98rem)", color: C.textMuted, lineHeight: 1.82, letterSpacing: "-0.005em" }}>
+                  I have built impactful projects like <span style={{ color: C.textPrimary, fontWeight: 600 }}>TechPath</span>, <span style={{ color: C.textPrimary, fontWeight: 600 }}>Smart Expense Tracker</span>, <span style={{ color: C.textPrimary, fontWeight: 600 }}>AgriTrust</span>, and a <span style={{ color: C.textPrimary, fontWeight: 600 }}>Smart Attendance System</span>, leveraging my technical stack to turn complex ideas into seamless user experiences.
+                </p>
+              </Reveal>
             </div>
 
-            {/* Journey timeline */}
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24 }}>
-              <span style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, letterSpacing: "0.14em", color: C.textMuted, textTransform: "uppercase", flexShrink: 0 }}>The Journey</span>
-              <div style={{ height: 1, background: C.border, flex: 1 }} />
-            </div>
-
-            <div ref={timeRef as React.RefObject<HTMLDivElement>}>
-              {JOURNEY.map((item, i) => {
-                const accent = item.isNow ? C.cyan : item.accentKey ? C[item.accentKey] : C.cyan;
-                return (
-                  <div key={item.year + item.title} style={{ display: "flex", gap: 0, opacity: timeVis ? 1 : 0, transform: timeVis ? "translateX(0)" : "translateX(-18px)", transition: rm ? "none" : `all 580px cubic-bezier(0.16,1,0.3,1) ${i * 90}ms` }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginRight: 18, flexShrink: 0, width: 18 }}>
-                      <div style={{ width: item.isNow ? 18 : 13, height: item.isNow ? 18 : 13, borderRadius: "50%", background: item.isNow ? accent : C.bgElevated, border: `2px solid ${accent}`, boxShadow: `0 0 12px ${ha(accent, item.isNow ? 0.6 : 0.25)}`, flexShrink: 0, zIndex: 1, marginTop: 3, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {item.isNow && <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.bgCanvas, animation: "pulseDot 2s ease-in-out infinite" }} />}
-                      </div>
-                      {i < JOURNEY.length - 1 && <div style={{ flex: 1, width: 1, minHeight: 20, marginTop: 5, background: `linear-gradient(to bottom,${ha(accent,0.45)},${C.border})` }} />}
-                    </div>
-                    <div style={{ flex: 1, paddingBottom: i < JOURNEY.length - 1 ? 26 : 0 }}>
-                      <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "2px 7px", borderRadius: 4, marginBottom: 7, background: ha(accent, 0.12), border: `1px solid ${ha(accent, 0.30)}` }}>
-                        <span style={{ fontSize: 10 }}>{item.icon}</span>
-                        <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em", color: accent, fontWeight: 600 }}>{item.year}</span>
-                      </div>
-                      <h4 style={{ margin: "0 0 1px", fontSize: 14, fontFamily: "monospace", fontWeight: 700, letterSpacing: "-0.02em", color: C.textSecondary, lineHeight: 1.2 }}>{item.title}</h4>
-                      <p style={{ margin: "0 0 7px", fontSize: 9, fontFamily: "monospace", letterSpacing: "0.08em", color: C.textMuted, textTransform: "uppercase" }}>{item.subtitle}</p>
-                      <p style={{ margin: "0 0 8px", fontSize: 11, fontFamily: "monospace", color: C.textMuted, lineHeight: 1.72 }}>{item.desc}</p>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                        {item.tags.map((t) => <TechTag key={t} label={t} accent={accent} compact />)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {/* Tech Stack Highlights */}
+            <Reveal vis={rightVis} rm={rm} delay={240}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+                <span style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, letterSpacing: "0.14em", color: C.textMuted, textTransform: "uppercase", flexShrink: 0 }}>Core Arsenal</span>
+                <div style={{ height: 1, background: C.border, flex: 1 }} />
+              </div>
+              
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {["React", "Next.js", "TypeScript", "Python", "Java", "MongoDB", "Node.js", "Tailwind CSS"].map((tech, i) => (
+                  <TechTag key={tech} label={tech} accent={i % 2 === 0 ? C.cyan : C.violet} />
+                ))}
+              </div>
+            </Reveal>
           </div>
         </div>
 

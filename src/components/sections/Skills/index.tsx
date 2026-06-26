@@ -272,9 +272,9 @@ export function SkillsSection() {
         </Reveal>
 
         {/* Canvas + panels */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr clamp(260px,36%,400px)", gap: "clamp(2rem,4vw,4rem)", alignItems: "start" }}>
+        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: activeCat ? "clamp(1.5rem,3vw,3rem)" : 0, alignItems: "flex-start", transition: "gap 400ms ease" }}>
           {/* Neural canvas */}
-          <div>
+          <div style={{ flex: 1, minWidth: 0, width: "100%", transition: "all 400ms ease" }}>
             <div style={{
               position: "relative", borderRadius: 18, overflow: "hidden",
               border: `1px solid ${activeCat ? ha(C[CAT_COLOR_MAP[activeCat] as keyof typeof C] as string, 0.32) : C.border}`,
@@ -317,47 +317,63 @@ export function SkillsSection() {
           </div>
 
           {/* Skill panels */}
-          <div ref={gridRef as React.RefObject<HTMLDivElement>} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {SKILL_CATEGORIES.map((cat) => {
-              const show  = !activeCat || activeCat === cat.id;
-              const color = C[cat.colorKey as keyof typeof C] as string;
-              return (
-                <div key={cat.id} style={{ opacity: show ? 1 : 0.26, transform: show ? "none" : "scale(0.98)", transition: `all 280ms` }}>
-                  <div style={{
-                    padding: "18px 18px", borderRadius: 13,
-                    border: `1px solid ${show && activeCat ? ha(color, 0.42) : C.border}`,
-                    borderTop: `2px solid ${show && activeCat ? color : ha(color, 0.22)}`,
-                    background: show && activeCat
-                      ? `linear-gradient(160deg,${ha(color,0.06)} 0%,${C.bgSurface} 60%)`
-                      : C.bgSurface,
-                    transition: "all 280ms",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                        <span style={{ fontSize: 14, color: show && activeCat ? color : C.textDim, transition: "color 280ms" }}>{cat.icon}</span>
-                        <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.08em", color: show && activeCat ? C.textPrimary : C.textMuted, textTransform: "uppercase", transition: "color 280ms" }}>{cat.label}</span>
+          <div ref={gridRef as React.RefObject<HTMLDivElement>} style={{
+            width: isMobile ? "100%" : (activeCat ? "clamp(260px,36%,400px)" : "0px"),
+            maxHeight: isMobile ? (activeCat ? "1000px" : "0px") : "none",
+            opacity: activeCat ? 1 : 0,
+            overflow: "hidden",
+            transition: "all 500ms cubic-bezier(0.16,1,0.3,1)",
+          }}>
+            <div style={{ width: isMobile ? "100%" : "clamp(260px,36%,400px)", display: "flex", flexDirection: "column", gap: 12, paddingBottom: isMobile ? 12 : 0 }}>
+              <div style={{ display: "grid" }}>
+                {SKILL_CATEGORIES.map((cat) => {
+                  const show  = activeCat === cat.id;
+                  const color = C[cat.colorKey as keyof typeof C] as string;
+                  return (
+                    <div key={cat.id} style={{
+                      gridArea: "1 / 1",
+                      opacity: show ? 1 : 0,
+                      pointerEvents: show ? "auto" : "none",
+                      transform: show ? "translateX(0)" : "translateX(20px)",
+                      transition: `opacity 300ms ease, transform 400ms cubic-bezier(0.16,1,0.3,1)`,
+                      zIndex: show ? 1 : 0,
+                    }}>
+                      <div style={{
+                        padding: "18px 18px", borderRadius: 13,
+                        border: `1px solid ${ha(color, 0.42)}`,
+                        borderTop: `2px solid ${color}`,
+                        background: `linear-gradient(160deg,${ha(color,0.06)} 0%,${C.bgSurface} 60%)`,
+                        boxShadow: `0 8px 32px ${ha(color, 0.1)}`,
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                            <span style={{ fontSize: 14, color }}>{cat.icon}</span>
+                            <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.08em", color: C.textPrimary, textTransform: "uppercase" }}>{cat.label}</span>
+                          </div>
+                          <span style={{ fontSize: 8, fontFamily: "monospace", padding: "2px 7px", borderRadius: 9999, background: ha(color, 0.12), border: `1px solid ${ha(color,0.28)}`, color }}>{cat.skills.length}</span>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+                          {cat.skills.map((sk, i) => (
+                            <SkillBar
+                              key={sk.name}
+                              name={sk.name} level={sk.level} years={sk.years}
+                              color={color} delay={i * 50}
+                              vis={show} active={true}
+                            />
+                          ))}
+                        </div>
                       </div>
-                      <span style={{ fontSize: 8, fontFamily: "monospace", padding: "2px 7px", borderRadius: 9999, background: ha(color, 0.12), border: `1px solid ${ha(color,0.28)}`, color }}>{cat.skills.length}</span>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-                      {cat.skills.map((sk, i) => (
-                        <SkillBar
-                          key={sk.name}
-                          name={sk.name} level={sk.level} years={sk.years}
-                          color={color} delay={i * 70}
-                          vis={gridVis} active={!!(show && activeCat)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            {/* Footnote */}
-            <div style={{ padding: "11px 14px", borderRadius: 10, background: ha(C.textPrimary, 0.02), border: `1px solid ${C.border}`, opacity: gridVis ? 1 : 0, transition: rm ? "none" : `opacity 600ms cubic-bezier(0.16,1,0.3,1) 600ms` }}>
-              <p style={{ fontSize: 10, fontFamily: "monospace", color: C.textMuted, margin: 0, lineHeight: 1.6 }}>
-                ⚡ Skill levels reflect real project usage — not tutorial completions. Always learning, never satisfied.
-              </p>
+                  );
+                })}
+              </div>
+
+              {/* Footnote */}
+              <div style={{ padding: "11px 14px", borderRadius: 10, background: ha(C.textPrimary, 0.02), border: `1px solid ${C.border}` }}>
+                <p style={{ fontSize: 10, fontFamily: "monospace", color: C.textMuted, margin: 0, lineHeight: 1.6 }}>
+                  ⚡ Skill levels reflect real project usage — not tutorial completions. Always learning, never satisfied.
+                </p>
+              </div>
             </div>
           </div>
         </div>
